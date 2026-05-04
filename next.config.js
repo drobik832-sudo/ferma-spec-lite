@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV === 'development';
+
 const nextConfig = {
-  output: 'export',
+  // Только для production сборки (GitHub Pages/Netlify)
+  output: isDev ? undefined : 'export',
   trailingSlash: true,
   images: {
     unoptimized: true

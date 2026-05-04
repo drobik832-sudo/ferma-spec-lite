@@ -45,17 +45,25 @@ export async function POST(req: NextRequest) {
   return proxy(req);
 }
 
-export async function generateStaticParams() {
-  return [
-    { path: [] },
-    { path: ["prompt"] },
-    { path: ["upload", "image"] },
-    { path: ["history"] },
-    { path: ["queue"] },
-    { path: ["system_stats"] },
-    { path: ["view"] },
-    { path: ["interrupt"] },
-    { path: ["free"] },
-    { path: ["object_info"] }
-  ];
+export async function PUT(req: NextRequest) {
+  return proxy(req);
+}
+
+export async function DELETE(req: NextRequest) {
+  return proxy(req);
+}
+
+export async function PATCH(req: NextRequest) {
+  return proxy(req);
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }
