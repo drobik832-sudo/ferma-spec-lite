@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Ferma Design Colors (Fallback) */
+  --bg-color: #fdfbf7;
+  --text-color: #111827;
+  --secondary-bg-color: #ffffff;
+  --hint-color: #6b7280;
+  --brand-color: #856c45;
+  --button-color: #856c45;
+  --button-text-color: #ffffff;
+}
+
+/* If Telegram Web App is active, these variables will be set by the platform. 
+   We map them to our variables or use them directly. 
+   However, since we want a specific "Premium" look, we might want to ignore standard TG background 
+   unless we want full native look. For this demo, I will keep the brand background 
+   but respect the text color if it's drastically different (e.g. dark mode). */
+
+body {
+  /* Force consistent background regardless of Telegram environment */
+  background-color: #fdfbf7;
+  color: #111827;
+  
+  /* Reset margins for full app experience */
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Scrollbar hiding for cleaner app look */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
