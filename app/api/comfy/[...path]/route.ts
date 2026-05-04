@@ -46,5 +46,34 @@ export async function POST(req: NextRequest) {
 }
 
 export async function generateStaticParams() {
-  return [];
+  return [
+    { prompt: "" },
+    { negative: "" },
+    { seed: "" },
+    { steps: "" },
+    { cfg: "" },
+    { denoise: "" },
+    { controlNetStrength: "" },
+    { modelName: "" },
+    { clientId: "" },
+    { finalPrompt: "" },
+    { negativePrompt: "" },
+    { width: "" },
+    { height: "" },
+    { fluxLora1Name: "" },
+    { fluxLora1StrengthModel: "" },
+    { fluxLora1StrengthClip: "" },
+    { fluxLora2Name: "" },
+    { fluxLora2StrengthModel: "" },
+    { fluxLora2StrengthClip: "" },
+    { fluxClipName1: "" },
+    { fluxClipName2: "" },
+    { fluxVaeName: "" },
+    { fluxMaxShift: "" },
+    { fluxBaseShift: "" },
+    { maxWaitSeconds: "" },
+    { engine: "" },
+    { inputImage: "" },
+    { publicBaseUrl: "" }
+  ];
 }
