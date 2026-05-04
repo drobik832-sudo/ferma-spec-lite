@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "name": "ferma-design-lite",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_COMFY_API_URL": "http://127.0.0.1:8188",
+    "ADMIN_TOKEN": "spik12345"
+  }
+}
