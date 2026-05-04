@@ -74,6 +74,19 @@ export async function generateStaticParams() {
     { maxWaitSeconds: "" },
     { engine: "" },
     { inputImage: "" },
-    { publicBaseUrl: "" }
+    { publicBaseUrl: "" },
+    { comfyApiUrl: "" },
+    { modelNameCandidates: "" },
+    { controlNetCandidates: "" },
+    { fluxClipName1: "" },
+    { fluxClipName2: "" },
+    { fluxVaeName: "" },
+    { fluxMaxShift: "" },
+    { fluxBaseShift: "" },
+    { fluxLoras: "" },
+    { maxWaitSeconds: "" },
+    { onTick: "" },
+    { strictApplied: "" },
+    { imageUrl: "" }
   ];
 }
