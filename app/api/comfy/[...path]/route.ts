@@ -44,3 +44,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return proxy(req);
 }
+
+export async function generateStaticParams() {
+  return [];
+}
