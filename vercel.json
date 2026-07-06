@@ -14,7 +14,6 @@
     }
   ],
   "env": {
-    "NEXT_PUBLIC_COMFY_API_URL": "http://127.0.0.1:8188",
-    "ADMIN_TOKEN": "spik12345"
+    "NEXT_PUBLIC_COMFY_API_URL": "http://127.0.0.1:8188"
   }
 }
