@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { telegramBotApi } from "../../../../lib/telegram/botApi";
-import { verifyTelegramInitData } from "../../../../lib/telegram/verifyInitData";
+import { authenticateTelegram } from "../../../../lib/api/withTelegramAuth";
+import { jsonError } from "../../../../lib/api/responses";
 
-const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
 const botUsername = process.env.TELEGRAM_BOT_USERNAME || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "";
 
 export async function POST(req: Request) {
@@ -13,16 +13,13 @@ export async function POST(req: Request) {
   const caption = typeof payload?.caption === "string" ? payload.caption : "";
   const message = typeof payload?.message === "string" ? payload.message : "";
 
-  if (!supabaseAdmin) return NextResponse.json({ ok: false, message: "supabase not configured" }, { status: 500 });
-  if (!initData) return NextResponse.json({ ok: false, message: "initData required" }, { status: 400 });
+  if (!supabaseAdmin) return jsonError("supabase not configured", 500);
+  if (!initData) return jsonError("initData required", 400);
 
-  const verified = verifyTelegramInitData(initData, botToken);
-  if (!verified.ok) {
-    const err = "message" in verified ? verified.message : "unauthorized";
-    return NextResponse.json({ ok: false, message: err }, { status: 401 });
-  }
+  const auth = authenticateTelegram(initData);
+  if (auth.error) return auth.error;
 
-  const telegramId = verified.user.id;
+  const { telegramId } = auth.user;
   const userResult = await supabaseAdmin
     .from("users")
     .select("telegram_id, chat_id, stars")
@@ -42,7 +39,7 @@ export async function POST(req: Request) {
       caption: caption ? caption.slice(0, 1024) : undefined
     });
     if (!res?.ok) {
-      return NextResponse.json({ ok: false, message: res?.description || "sendPhoto failed" }, { status: 502 });
+      return jsonError(res?.description || "sendPhoto failed", 502);
     }
     return NextResponse.json({ ok: true });
   }
@@ -55,11 +52,10 @@ export async function POST(req: Request) {
       text: finalMessage.slice(0, 4096)
     });
     if (!res?.ok) {
-      return NextResponse.json({ ok: false, message: res?.description || "sendMessage failed" }, { status: 502 });
+      return jsonError(res?.description || "sendMessage failed", 502);
     }
     return NextResponse.json({ ok: true });
   }
 
-  return NextResponse.json({ ok: false, message: "imageUrl or message required" }, { status: 400 });
+  return jsonError("imageUrl or message required", 400);
 }
-

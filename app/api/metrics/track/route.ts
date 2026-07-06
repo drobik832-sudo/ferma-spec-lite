@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
-import { verifyTelegramInitData } from "../../../lib/telegram/verifyInitData";
-
-const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
+import { authenticateTelegram } from "../../../lib/api/withTelegramAuth";
+import { noContent } from "../../../lib/api/responses";
 
 export async function POST(req: Request) {
   const payload = await req.json().catch(() => ({}));
@@ -11,18 +10,18 @@ export async function POST(req: Request) {
   const data = payload?.data ?? null;
 
   if (!supabaseAdmin) {
-    return new NextResponse(null, { status: 204 });
+    return noContent();
   }
   if (!initData || !event) {
-    return new NextResponse(null, { status: 204 });
+    return noContent();
   }
 
-  const verified = verifyTelegramInitData(initData, botToken);
-  if (!verified.ok) {
-    return new NextResponse(null, { status: 204 });
+  const auth = authenticateTelegram(initData);
+  if (auth.error) {
+    return noContent();
   }
 
-  const telegramId = verified.user.id;
+  const { telegramId } = auth.user;
   const insert = await supabaseAdmin.from("events").insert([
     {
       telegram_id: telegramId,
@@ -32,9 +31,8 @@ export async function POST(req: Request) {
   ]);
 
   if (insert.error) {
-    return new NextResponse(null, { status: 204 });
+    return noContent();
   }
 
   return NextResponse.json({ ok: true });
 }
-

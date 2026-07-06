@@ -1,22 +1,19 @@
 import { NextResponse } from "next/server";
-import { isAdminRequest } from "../../../lib/admin/auth";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { requireAdminWithSupabase } from "../../../lib/api/withAdminAuth";
+import { jsonOk, jsonError } from "../../../lib/api/responses";
 
 export async function GET(req: Request) {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ ok: false, message: "unauthorized" }, { status: 401 });
-  }
-  if (!supabaseAdmin) {
-    return NextResponse.json({ ok: true, items: [] });
-  }
+  const supabaseOrError = await requireAdminWithSupabase();
+  if (supabaseOrError instanceof NextResponse) return supabaseOrError;
 
+  const supabase = supabaseOrError;
   const url = new URL(req.url);
   const telegramIdRaw = url.searchParams.get("telegramId");
   const kind = url.searchParams.get("kind");
   const limitRaw = url.searchParams.get("limit") || "100";
   const limit = Math.max(1, Math.min(500, Number(limitRaw) || 100));
 
-  let query = supabaseAdmin
+  let query = supabase
     .from("transactions")
     .select("id, created_at, telegram_id, kind, stars_delta, amount, currency, provider, provider_ref, status, payload")
     .order("created_at", { ascending: false })
@@ -34,9 +31,8 @@ export async function GET(req: Request) {
 
   const result = await query;
   if (result.error) {
-    return NextResponse.json({ ok: false, message: result.error.message }, { status: 502 });
+    return jsonError(result.error.message, 502);
   }
 
-  return NextResponse.json({ ok: true, items: result.data || [] });
+  return jsonOk({ items: result.data || [] });
 }
-
