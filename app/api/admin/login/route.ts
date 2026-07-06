@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safeTokenEqual } from "../../../lib/admin/auth";
 
 export async function POST(req: Request) {
   const adminToken = process.env.ADMIN_TOKEN || "";
@@ -7,7 +8,7 @@ export async function POST(req: Request) {
   }
   const payload = await req.json().catch(() => ({}));
   const token = typeof payload?.token === "string" ? payload.token : "";
-  if (!token || token !== adminToken) {
+  if (!token || !safeTokenEqual(token, adminToken)) {
     return NextResponse.json({ ok: false, message: "unauthorized" }, { status: 401 });
   }
 

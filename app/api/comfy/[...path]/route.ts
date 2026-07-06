@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 const comfyApiUrl = process.env.NEXT_PUBLIC_COMFY_API_URL || "http://127.0.0.1:8188";
 
+// Only allow cross-origin access to explicitly configured origins.
+// The frontend calls this proxy same-origin, so no CORS header is emitted by default.
+const allowedOrigin = process.env.COMFY_ALLOWED_ORIGIN || "";
+
 async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname.replace(/^\/api\/comfy/, "");
   const targetUrl = `${comfyApiUrl}${path}${req.nextUrl.search}`;
@@ -58,12 +62,14 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function OPTIONS(req: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+  const requestOrigin = req.headers.get("origin") || "";
+  if (allowedOrigin && requestOrigin && requestOrigin === allowedOrigin) {
+    headers['Access-Control-Allow-Origin'] = allowedOrigin;
+    headers['Vary'] = 'Origin';
+  }
+  return new NextResponse(null, { status: 200, headers });
 }

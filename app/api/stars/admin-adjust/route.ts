@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { safeTokenEqual } from "../../../lib/admin/auth";
 
 const adminToken = process.env.ADMIN_TOKEN || "";
 
@@ -8,7 +9,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, message: "ADMIN_TOKEN missing" }, { status: 500 });
   }
   const headerToken = req.headers.get("x-admin-token") || "";
-  if (headerToken !== adminToken) {
+  if (!safeTokenEqual(headerToken, adminToken)) {
     return NextResponse.json({ ok: false, message: "unauthorized" }, { status: 401 });
   }
   if (!supabaseAdmin) {
