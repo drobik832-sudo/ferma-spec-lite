@@ -10,6 +10,13 @@ export async function telegramBotApi(method: string, body: Record<string, any>) 
     body: JSON.stringify(body)
   });
   const json = await res.json().catch(() => null);
+  if (!json) {
+    // Non-JSON response (e.g. a gateway error page). Surface the HTTP status
+    // instead of returning a bare null that erases the failure reason.
+    const message = `Telegram API ${method} failed with status ${res.status}`;
+    console.error(`[telegram/botApi] ${message}`);
+    return { ok: false, error: { message }, description: message };
+  }
   return json;
 }
 

@@ -55,7 +55,9 @@ export async function POST(req: Request) {
       payload: { source: "auto_create" }
     }
   ]);
-  void txResult;
+  if (txResult.error) {
+    console.error(`[stars/balance] Failed to record trial_grant transaction for telegram_id=${telegramId}:`, txResult.error.message);
+  }
 
   return NextResponse.json({ ok: true, stars: createdUser?.stars ?? defaultTrialStars });
 }

@@ -60,7 +60,9 @@ export async function POST(req: Request) {
       payload: reason ? { reason } : null
     }
   ]);
-  void txResult;
+  if (txResult.error) {
+    console.error(`[admin/users/adjust] Failed to record admin_adjust transaction for telegram_id=${telegramId}:`, txResult.error.message);
+  }
 
   return NextResponse.json({ ok: true, stars: updated.stars ?? nextStars });
 }

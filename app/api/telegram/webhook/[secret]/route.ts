@@ -29,10 +29,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     const stars = typeof userResult.data?.stars === "number" ? userResult.data.stars : 0;
 
     if (!hasUser) {
-      await supabaseAdmin
+      const insertUserResult = await supabaseAdmin
         .from("users")
         .insert([{ telegram_id: telegramId, stars: defaultTrialStars, chat_id: chatId }]);
-      await supabaseAdmin.from("transactions").insert([
+      if (insertUserResult.error) {
+        console.error(`[telegram/webhook] Failed to create user telegram_id=${telegramId} on /start:`, insertUserResult.error.message);
+      }
+      const trialTxResult = await supabaseAdmin.from("transactions").insert([
         {
           telegram_id: telegramId,
           kind: "trial_grant",
@@ -41,11 +44,17 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
           payload: { source: "bot_start" }
         }
       ]);
+      if (trialTxResult.error) {
+        console.error(`[telegram/webhook] Failed to record trial_grant transaction for telegram_id=${telegramId}:`, trialTxResult.error.message);
+      }
     } else {
-      await supabaseAdmin
+      const updateChatResult = await supabaseAdmin
         .from("users")
         .update({ chat_id: chatId })
         .eq("telegram_id", telegramId);
+      if (updateChatResult.error) {
+        console.error(`[telegram/webhook] Failed to update chat_id for telegram_id=${telegramId}:`, updateChatResult.error.message);
+      }
     }
 
     await telegramBotApi("sendMessage", {
@@ -85,6 +94,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     .eq("telegram_id", telegramId)
     .maybeSingle();
 
+  if (userResult.error) {
+    // Do not proceed: defaulting to 0 here would overwrite the user's real
+    // balance. Surface a 5xx so Telegram retries delivery of this payment.
+    console.error(`[telegram/webhook] Failed to read balance before crediting purchase for telegram_id=${telegramId}:`, userResult.error.message);
+    return NextResponse.json({ ok: false, message: "failed to read balance" }, { status: 502 });
+  }
+
   const currentStars = userResult.data?.stars ?? 0;
   const nextStars = currentStars + stars;
 
@@ -94,7 +110,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     .select("stars")
     .single();
 
-  void upsertResult;
+  if (upsertResult.error) {
+    // Payment succeeded but crediting failed. Surface a 5xx so Telegram retries
+    // rather than silently losing the purchased stars.
+    console.error(`[telegram/webhook] Failed to credit ${stars} stars to telegram_id=${telegramId} after payment:`, upsertResult.error.message);
+    return NextResponse.json({ ok: false, message: "failed to credit stars" }, { status: 502 });
+  }
 
   const txResult = await supabaseAdmin.from("transactions").insert([
     {
@@ -109,7 +130,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
       payload: payload ? { invoice_payload: payload } : null
     }
   ]);
-  void txResult;
+  if (txResult.error) {
+    // Stars are already credited above; log the missing ledger entry but return
+    // 200 so Telegram does not retry and double-credit the purchase.
+    console.error(`[telegram/webhook] Failed to record purchase transaction for telegram_id=${telegramId} (stars already credited):`, txResult.error.message);
+  }
 
   return NextResponse.json({ ok: true });
 }
