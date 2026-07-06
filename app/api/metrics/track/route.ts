@@ -32,6 +32,7 @@ export async function POST(req: Request) {
   ]);
 
   if (insert.error) {
+    console.error(`[metrics/track] Failed to record event "${event}" for telegram_id=${telegramId}:`, insert.error.message);
     return new NextResponse(null, { status: 204 });
   }
 

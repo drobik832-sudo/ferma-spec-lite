@@ -32,6 +32,7 @@ export async function GET() {
       }
     });
   } catch (e: any) {
+    console.error(`[admin/health] ComfyUI health check failed for ${comfyApiUrl}:`, e?.message || e);
     return NextResponse.json({
       ok: true,
       comfy: {

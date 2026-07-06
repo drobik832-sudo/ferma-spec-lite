@@ -60,7 +60,9 @@ export async function POST(req: Request) {
         payload: { source: "auto_check" }
       }
     ]);
-    void txResult;
+    if (txResult.error) {
+      console.error(`[stars/check] Failed to record trial_grant transaction for telegram_id=${telegramId}:`, txResult.error.message);
+    }
   } else {
     stars = existingUser.stars ?? 0;
   }

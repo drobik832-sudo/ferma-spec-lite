@@ -46,7 +46,9 @@ export async function POST(req: Request) {
       status: "success"
     }
   ]);
-  void txResult;
+  if (txResult.error) {
+    console.error(`[stars/spend] Failed to record transaction for telegram_id=${telegramId}:`, txResult.error.message);
+  }
 
   return NextResponse.json({ ok: true, stars: Number(data || 0) });
 }
