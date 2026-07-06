@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { telegramBotApi } from "../../../../lib/telegram/botApi";
+import { recordTransaction } from "../../../../lib/stars/recordTransaction";
 
 export async function POST(req: Request, ctx: { params: Promise<{ secret: string }> }) {
   const secret = (await ctx.params).secret;
@@ -32,15 +33,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
       await supabaseAdmin
         .from("users")
         .insert([{ telegram_id: telegramId, stars: defaultTrialStars, chat_id: chatId }]);
-      await supabaseAdmin.from("transactions").insert([
-        {
-          telegram_id: telegramId,
-          kind: "trial_grant",
-          stars_delta: defaultTrialStars,
-          status: "success",
-          payload: { source: "bot_start" }
-        }
-      ]);
+      await recordTransaction({
+        telegramId,
+        kind: "trial_grant",
+        starsDelta: defaultTrialStars,
+        payload: { source: "bot_start" }
+      });
     } else {
       await supabaseAdmin
         .from("users")
@@ -50,7 +48,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
 
     await telegramBotApi("sendMessage", {
       chat_id: String(chatId),
-      text: `Личный кабинет Ferma Design\n\nБаланс: ${hasUser ? stars : defaultTrialStars} ⭐\n\nСюда будут приходить ваши генерации и информация по звёздам.`
+      text: `\u041b\u0438\u0447\u043d\u044b\u0439 \u043a\u0430\u0431\u0438\u043d\u0435\u0442 Ferma Design\n\n\u0411\u0430\u043b\u0430\u043d\u0441: ${hasUser ? stars : defaultTrialStars} \u2b50\n\n\u0421\u044e\u0434\u0430 \u0431\u0443\u0434\u0443\u0442 \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442\u044c \u0432\u0430\u0448\u0438 \u0433\u0435\u043d\u0435\u0440\u0430\u0446\u0438\u0438 \u0438 \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043f\u043e \u0437\u0432\u0451\u0437\u0434\u0430\u043c.`
     });
   }
 
@@ -96,20 +94,16 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
 
   void upsertResult;
 
-  const txResult = await supabaseAdmin.from("transactions").insert([
-    {
-      telegram_id: telegramId,
-      kind: "purchase",
-      stars_delta: stars,
-      provider: "telegram",
-      provider_ref: providerRef,
-      currency,
-      amount: totalAmount,
-      status: "success",
-      payload: payload ? { invoice_payload: payload } : null
-    }
-  ]);
-  void txResult;
+  await recordTransaction({
+    telegramId,
+    kind: "purchase",
+    starsDelta: stars,
+    provider: "telegram",
+    providerRef,
+    currency,
+    amount: totalAmount,
+    payload: payload ? { invoice_payload: payload } : null
+  });
 
   return NextResponse.json({ ok: true });
 }

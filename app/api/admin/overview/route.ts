@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { isAdminRequest } from "../../../lib/admin/auth";
+import { requireAdmin } from "../../../lib/api/withAdminAuth";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 export async function GET() {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ ok: false, message: "unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   if (!supabaseAdmin) {
     return NextResponse.json({
       ok: true,
